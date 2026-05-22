@@ -6,6 +6,7 @@ from pydantic import (
     Field,
     field_validator,
     model_validator,
+    computed_field,
 )
 class Patient(BaseModel):
     # Patient Name
@@ -25,6 +26,9 @@ class Patient(BaseModel):
         float,
         Field(gt=0, lt=200, strict=True),
     ] # Weight Validation
+    hight:Annotated[
+        float,
+        Field(gt=0,lt=200,strict=True)]
 
     married: Annotated[
         Optional[bool],
@@ -65,6 +69,12 @@ class Patient(BaseModel):
     @classmethod
     def name_validator(cls, value):
         return value.upper()
+    # ---------------- computed field ---------------- #
+    @computed_field
+    @property
+    def bmi(self) ->float:
+        bmi = self.weight/self.hight**2
+        return round(bmi,2)
 
     # ---------------- MODEL VALIDATOR ---------------- #
 
@@ -92,6 +102,7 @@ def insert_data(patient: Patient):
 def update_data(patient: Patient):
     print(patient.name)
     print(patient.age)
+    print("bim of petient",patient.bmi)
     print("Data updated successfully")
 
 
@@ -103,6 +114,7 @@ patient_data = {
     "age": 62,
     "linkedin": "https://www.ishwarlahire.com",
     "weight": 69.0,
+    "hight":4,
     "contact_details": {
         "Phone": "1234567890",
         "emergency": "1122334455",
