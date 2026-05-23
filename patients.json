@@ -48,5 +48,25 @@
     "weight": 75,
     "bmi": 31.22,
     "verdict": "Obese"
+  },
+  "P006": {
+    "name": "Ram Patil",
+    "city": "Mumbai",
+    "age": 19,
+    "gender": "Male",
+    "height": 2.1,
+    "weight": 36.78,
+    "BMI": 8.34013605442177,
+    "verdict": "Under Weight"
+  },
+  "P007": {
+    "name": "Sham Patil",
+    "city": "Nashik",
+    "age": 65,
+    "gender": "Male",
+    "height": 3.7,
+    "weight": 47.69,
+    "BMI": 3.4835646457268075,
+    "verdict": "Under Weight"
   }
 }

@@ -8,6 +8,12 @@ from pydantic import (
     model_validator,
     computed_field,
 )
+class Address(BaseModel):
+    city:str
+    taluka:str
+    state:str
+    pincode:int
+
 class Patient(BaseModel):
     # Patient Name
     name: Annotated[
@@ -26,7 +32,7 @@ class Patient(BaseModel):
         float,
         Field(gt=0, lt=200, strict=True),
     ] # Weight Validation
-    hight:Annotated[
+    height:Annotated[
         float,
         Field(gt=0,lt=200,strict=True)]
 
@@ -44,6 +50,7 @@ class Patient(BaseModel):
     ]# Allergies List
 
     contact_details: dict[str, str]   # Contact Details
+    address:Address
 
     # ---------------- FIELD VALIDATORS ---------------- #
 
@@ -73,7 +80,7 @@ class Patient(BaseModel):
     @computed_field
     @property
     def bmi(self) ->float:
-        bmi = self.weight/self.hight**2
+        bmi = self.weight/self.height**2
         return round(bmi,2)
 
     # ---------------- MODEL VALIDATOR ---------------- #
@@ -103,10 +110,15 @@ def update_data(patient: Patient):
     print(patient.name)
     print(patient.age)
     print("bim of petient",patient.bmi)
+    print("Address",patient.address)
     print("Data updated successfully")
 
 
 # ---------------- INPUT DATA ---------------- #
+address_data = {"city":"bhalur","taluka":"nandgaon","state":"maharashtra","pincode":423106}
+address_obj = Address(**address_data)
+
+
 
 patient_data = {
     "name": "Ishwar",
@@ -114,17 +126,35 @@ patient_data = {
     "age": 62,
     "linkedin": "https://www.ishwarlahire.com",
     "weight": 69.0,
-    "hight":4,
+    "height":4,
     "contact_details": {
         "Phone": "1234567890",
         "emergency": "1122334455",
     },
+    "address":address_obj,
 }
-
-
-# ---------------- OBJECT CREATION ---------------- #
 
 patient1 = Patient(**patient_data)
 
 insert_data(patient1)
 update_data(patient1)
+
+#serilization  export data
+
+temp_data = patient1.model_dump()
+temp_data_json = patient1.model_dump_json()
+print(temp_data)
+print(temp_data_json)
+
+#include exclude
+temp_data1 = patient1.model_dump(include="name,email,age") #field only include 
+
+
+temp_data_json1 = patient1.model_dump_json(exclude="email,name") # field excluded from export data
+temp_secure = patient1.model_dump(exclude_unset=True)# for non entered field
+
+print(temp_data1)
+print(temp_data_json1)
+print("==============================================")
+print(type(temp_data_json))
+print(temp_data_json)
