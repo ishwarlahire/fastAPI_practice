@@ -1,7 +1,7 @@
 from fastapi import FastAPI,HTTPException,Path,Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel,Field,computed_field
-from typing import Dict ,AnyStr,Annotated,Literal
+from typing import Dict ,AnyStr,Annotated,Literal,Optional
 import json
 
 app = FastAPI()
@@ -11,14 +11,14 @@ class Patient(BaseModel):
     name:Annotated[str,Field(...,description='Enter Patient Name' , examples=["Ishwar Lahire"])]
     city:Annotated[str,Field(...,description="Enter Patient city name",examples=['Pune'])]
     age:Annotated[int,Field(...,description="Enter patient Currunt Age",gt=0,lt=150,examples=[59])]
-    gender:Annotated[Literal['Male','Female','Other'],Field(description='select Patient Gender male,Female,Other',examples=["Male"])]
+    gender:Annotated[Literal["Male", "Female", "Other", "male", "female", "other"],Field(description='select Patient Gender male,Female,Other',examples=["Male"])]
     height:Annotated[float,Field(description="Enter Patient Height in meter",examples=[3.1],gt=0,lt=5)]
     weight:Annotated[float,Field(description="Enter Patient Weight in KG", examples=[56.78],gt=0,lt=150)]
 
     @computed_field
     @property
     def BMI(self) ->float:
-        BMI = self.weight/self.height**2
+        BMI = round(self.weight/self.height**2,2)
         return BMI
     @computed_field
     @property
@@ -39,7 +39,14 @@ def save_data(data):
     with open("patients.json",'w') as f:
         json.dump(data,f)
 
-
+class updatePatient(BaseModel):
+   name:Annotated[Optional[str],Field(default=None)]
+   city:Annotated[Optional[str],Field(default=None)]
+   age:Annotated[Optional[int],Field(default=None,gt=0)]
+   gender:Annotated[Optional[Literal["Male", "Female", "Other", "male", "female", "other"]],Field(default=None)]
+   height:Annotated[Optional[float],Field(default=None,gt=0)]
+   weight:Annotated[Optional[float],Field(default=None,gt=0)]
+    
 
 @app.get("/")
 def  hello():
@@ -88,3 +95,27 @@ def createPatient(patient:Patient):
     save_data(data)
     #return message
     return JSONResponse(status_code=201,content={"message":"Patient create successfully"})
+
+#PUT / Update Api
+@app.put("/edit{patient_id}")
+def updatePatient_details(patient_id:str,patient_update:updatePatient):
+    data = load_data()
+    if patient_id not in data:
+        raise HTTPException(status_code=404,detail="patient not found")
+    #
+    existing_patient_info = data[patient_id]
+    updated_patient_info = patient_update.model_dump(exclude_unset=True)
+
+    for key,value in updated_patient_info.items():
+        existing_patient_info[key]=value
+    
+    existing_patient_info['id']=patient_id
+    patient_pydantic_obj = Patient(**existing_patient_info)
+
+    existing_patient_info = patient_pydantic_obj.model_dump(exclude="id")
+
+    data[patient_id] = existing_patient_info
+
+    save_data(data)
+
+    return JSONResponse(status_code=200,content={"message":"Patient updated successfully"})
